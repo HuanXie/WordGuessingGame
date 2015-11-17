@@ -23,8 +23,9 @@ public class Clientgui1 extends javax.swing.JPanel
     private javax.swing.JTextField inputOfPort;
     private javax.swing.JTextField input;
     private javax.swing.JLabel show;
+    private javax.swing.JButton replay;
+    private javax.swing.JButton end;
     private clientThread connection;
-    private final String msgOfStart = "start";
     
     public Clientgui1() {
         creatGUI();
@@ -40,6 +41,8 @@ public class Clientgui1 extends javax.swing.JPanel
         input = new javax.swing.JTextField();
         enter = new javax.swing.JButton();
         show = new javax.swing.JLabel();
+        replay = new javax.swing.JButton();
+        end = new javax.swing.JButton();
 
         address.setText("IPaddress");
 
@@ -55,6 +58,10 @@ public class Clientgui1 extends javax.swing.JPanel
         inputOfPort.setText("4444");
 
         show.setText("");
+        
+        replay.setText("Replay");
+        
+        end.setText("end");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -82,6 +89,12 @@ public class Clientgui1 extends javax.swing.JPanel
                 .addGap(82, 82, 82)
                 .addComponent(show, javax.swing.GroupLayout.PREFERRED_SIZE, 388, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(84, Short.MAX_VALUE))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                    .addContainerGap(152, Short.MAX_VALUE)
+                    .addComponent(replay, javax.swing.GroupLayout.PREFERRED_SIZE, 99, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGap(149, 149, 149)
+            		.addComponent(end)
+            		.addGap(22, 22, 22))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -104,6 +117,11 @@ public class Clientgui1 extends javax.swing.JPanel
                 .addGap(18, 18, 18)
                 .addComponent(show, javax.swing.GroupLayout.PREFERRED_SIZE, 72, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(28, Short.MAX_VALUE))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                    .addContainerGap(271, Short.MAX_VALUE)
+                    .addComponent(replay)
+                    .addContainerGap()
+            		.addComponent(end))
         );
         
         start.addActionListener(new ActionListener()
@@ -117,7 +135,7 @@ public class Clientgui1 extends javax.swing.JPanel
                 //System.out.println(portnumber);
                 start.setEnabled(false);
                 connection =
-                       new clientThread(Clientgui1.this, host, portnumber,msgOfStart);
+                       new clientThread(Clientgui1.this, host, portnumber);
                 new Thread(connection).start(); //multithreaded
             }
         });
@@ -129,6 +147,25 @@ public class Clientgui1 extends javax.swing.JPanel
             {
             	String checkChar = input.getText().toLowerCase();
             	connection.getCheck(checkChar);
+            }
+        });
+        
+        replay.addActionListener(new ActionListener()
+        {
+            @Override
+            public void actionPerformed(ActionEvent ae)
+            {
+            	String replay = "start";
+            	connection.continueGame(replay);
+            }
+        });
+        
+        end.addActionListener(new ActionListener()
+        {
+            @Override
+            public void actionPerformed(ActionEvent ae)
+            {
+            	connection.close();
             }
         });
     }

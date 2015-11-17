@@ -26,8 +26,7 @@ public class ConnectionHandler extends Thread
     private BufferedInputStream in;
     private BufferedOutputStream out;
     private String word;
-    private int totalScore = 5;
-    private int attempt = 5;
+    private int totalScore = 0;
     private String current;
 
     public ConnectionHandler(Socket clientSocket)
@@ -39,62 +38,70 @@ public class ConnectionHandler extends Thread
     {
     	try
     	{
-    	word = chooseWord();
-    	current = getFormofWord(word);
-    	while(attempt > 0)// in the five times attempt 
-    	{
-    		attempt--;
-    		current = checkword(current);
-    		if(current.equalsIgnoreCase(word)) //client input the right answer
+    		while(true)
     		{
-    			String cong = "congratulations! The correct word is ";
-				byte[] fromserver1 = cong.getBytes();
-				out.write(fromserver1, 0, fromserver1.length);
-				byte[] fromserver2 = word.getBytes();
-				out.write(fromserver2, 0, fromserver2.length);
-				String score = ". The total score is ";
-				byte[] fromserver3 = score.getBytes();
-				out.write(fromserver3, 0, fromserver3.length);
-				String total = Integer.toString(totalScore);
-				byte[] fromserver4 = total.getBytes();
-				out.write(fromserver4, 0, fromserver4.length);
-				out.flush();
-    			break;
-    		}else
-    		{
-    			String continueGuess = "The current word is in form of ";
-    			byte[] cont = continueGuess.getBytes();
-				out.write(cont, 0, cont.length);
-				
-				byte[] curr = current.getBytes();
-				out.write(curr, 0, curr.length);
-				
-				String noticeOfChance = "Chances to guess are: ";
-				byte[] noticeOfChancebyte = noticeOfChance.getBytes();
-				out.write(noticeOfChancebyte, 0, noticeOfChancebyte.length);
-				
-				String leftChance = Integer.toString(attempt);
-				byte[] leftchance = leftChance.getBytes();
-				out.write(leftchance, 0, leftchance.length);
-				out.flush();
+    			word = null;
+    			word = chooseWord();
+    			if (word == null) {
+    				System.out.println("Client terminated the game");
+    				if (!clientSocket.isClosed()) {
+    					System.out.println("Server closes the socket");
+    					clientSocket.close();
+    				}
+    				return; //client says end
+    			}
+    			int attempt = 5;
+    			current = getFormofWord(word);
+    			while(attempt > 0)// in the five times attempt 
+    			{
+    				attempt--;
+    				current = checkword(current);
+    				if(current.equalsIgnoreCase(word)) //client input the right answer
+    				{
+    					String cong = "congratulations! The correct word is ";
+    					byte[] fromserver1 = cong.getBytes();
+    					out.write(fromserver1, 0, fromserver1.length);
+    					byte[] fromserver2 = word.getBytes();
+    					out.write(fromserver2, 0, fromserver2.length);
+    					String score = ". The total score is ";
+    					byte[] fromserver3 = score.getBytes();
+    					out.write(fromserver3, 0, fromserver3.length);
+    					totalScore++;
+    					String total = Integer.toString(totalScore);
+    					byte[] fromserver4 = total.getBytes();
+    					out.write(fromserver4, 0, fromserver4.length);
+    					out.flush();
+    					break;
+    				}else
+    				{
+    					if(attempt == 0) // no attempt left and current is not right answer
+    					{
+    						gameover();
+    					}else
+    					{
+    						String continueGuess = "The current word is in form of ";
+    						byte[] cont = continueGuess.getBytes();
+    						out.write(cont, 0, cont.length);
+    						
+    						byte[] curr = current.getBytes();
+    						out.write(curr, 0, curr.length);
+    						
+    						String noticeOfChance = "Chances to guess are: ";
+    						byte[] noticeOfChancebyte = noticeOfChance.getBytes();
+    						out.write(noticeOfChancebyte, 0, noticeOfChancebyte.length);
+    						
+    						String leftChance = Integer.toString(attempt);
+    						byte[] leftchance = leftChance.getBytes();
+    						out.write(leftchance, 0, leftchance.length);
+    						out.flush();
+    					}
+    				}
+    			}
     		}
-    		totalScore--;
-    	}
-    	Thread.sleep(5000);
-    	/*if(attempt == 0 && !current.equals(word)) // no attempt left and current is not right answer
-    	{
-    		gameover();
-    	}else // attempt is not zero
-    	{
-    		close();
-    	}*/
     	}catch(IOException e)
 		{
 			System.out.println(e.toString());
 			System.exit(1);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
     }
     
@@ -109,8 +116,8 @@ public class ConnectionHandler extends Thread
             
             byte[] msg = new byte[5];
             in.read(msg, 0, 5);
-            String msgFromServer = new String(msg);
-            if(msgFromServer.equals("start"))
+            String msgFromClient = new String(msg);
+            if(msgFromClient.equals("start"))
             {
     			FileInputStream fs= new FileInputStream("C://Users//huan//workspace//networkJavaLab1//src//words.txt");
     			BufferedReader br = new BufferedReader(new InputStreamReader(fs));
@@ -127,16 +134,18 @@ public class ConnectionHandler extends Thread
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-    			byte[] numberOfAttempt = intToByteArray(attempt);
+    			byte[] numberOfAttempt = intToByteArray(5);
     			out.write(numberOfAttempt, 0, numberOfAttempt.length);
             	byte[] toClient = intToByteArray(word.length());
                 out.write(toClient, 0, toClient.length);
                 out.flush();
                 System.out.print(word);
             }
-            else
+            else if (msgFromClient.contains("end")) {
+            	
+            }else 
             {
-            	System.out.println(msgFromServer);
+            	throw new IllegalArgumentException("Invalid input from client " + msgFromClient);
             }
         } catch (IOException e)
         {
@@ -221,9 +230,7 @@ public class ConnectionHandler extends Thread
     		String gameOver = "game over";
     		byte[] dead = gameOver.getBytes();
     		out.write(dead, 0, dead.length);
-            out.close();
-            in.close();
-            clientSocket.close();
+    		out.flush();
         } catch (IOException e)
         {
             e.printStackTrace();

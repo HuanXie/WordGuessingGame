@@ -21,32 +21,29 @@ public class clientThread extends Thread{
         private final String host;
         private final int port;
         private final Clientgui1 gui;
-        private final String msg;
         private Socket clientSocket; 
         private BufferedInputStream in = null;
     	private BufferedOutputStream out = null;
     	private final LinkedBlockingQueue<String> check =
                 new LinkedBlockingQueue<>();
+    	private final LinkedBlockingQueue<String> startQueue =
+                new LinkedBlockingQueue<>();
     	private int counter;
         
-        public clientThread(Clientgui1 gui, String host, int port, String msg)
+        public clientThread(Clientgui1 gui, String host, int port)
         {
         	this.host = host;
         	this.port = port;
         	this.gui = gui;
-        	this.msg = msg;
         }
         
         public void run()
         {
-            connect();
-            startgame();
-            while(counter > 0)
-            {
-            	check();
-            	counter--;
-            }
-            //close();
+        	connect();
+        	while (true) {
+        		startgame();
+        		while(!check());
+        	}
         }
         
         public void connect()
@@ -61,6 +58,7 @@ public class clientThread extends Thread{
         		clientSocket = new Socket(host, port);
         		in = new BufferedInputStream(clientSocket.getInputStream());
         		out = new BufferedOutputStream(clientSocket.getOutputStream());
+        		startQueue.add("start");
         	}
         	catch (UnknownHostException e)
             {
@@ -76,12 +74,12 @@ public class clientThread extends Thread{
         
         public void startgame()
         {
-        	String result;
+        	String result = null;
         	int length;
         	StringBuilder newResult = new StringBuilder();
         	try
         	{
-        		byte[] toServer = msg.getBytes();
+        		byte[] toServer = startQueue.take().getBytes();
         		out.write(toServer, 0, toServer.length);
                 out.flush();
                 byte[] attempt = new byte[4];
@@ -108,7 +106,10 @@ public class clientThread extends Thread{
         	}catch(IOException e)
         	{
         		result = "unable to send start message";
-        	}
+        	} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
         	gui.showStart(result);
         }
         
@@ -117,8 +118,14 @@ public class clientThread extends Thread{
         	check.add(checkChar);
         }
         
-        public void check()
+        public void continueGame(String cont)
         {
+        	startQueue.add(cont);
+        }
+        
+        public boolean check()
+        {
+        	boolean finished = false;
         	String result = null;
         	try
         	{ 
@@ -132,6 +139,10 @@ public class clientThread extends Thread{
         		byte[] fromServer = new byte[256];
                 in.read(fromServer, 0, fromServer.length);
                 result = new String(fromServer);
+                if(result.contains("congratulations") || result.contains("game over"))
+                {
+                	finished = true; 
+                }
         	}catch(IOException e)
         	{
         		System.out.println(e);
@@ -140,6 +151,7 @@ public class clientThread extends Thread{
 				e.printStackTrace();
 			}
         	gui.showResult(result);
+        	return finished;
         }
         
         public static int byteArrayToInt(byte[] b) 
@@ -161,30 +173,19 @@ public class clientThread extends Thread{
         
         public void close()
         {
-        	try {
-        		byte[] fromserver = new byte[256];
-                in.read(fromserver, 0, fromserver.length);
-                String fromServer = new String(fromserver);
-				char[] newfromServer = new char[9];
-				for(int i = 0; i < newfromServer.length; i++)
-				{
-					newfromServer[i] = fromServer.charAt(i);
-				}
-				String newFromClient = new String(newfromServer);
-                if(newFromClient.equals("game over"))
-                {
-                	gui.showResult("game over");
-                }else
-                {
-                	gui.showResult(fromServer);
-                }
-                //out.close();
-            	//in.close();
-            	//clientSocket.close();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+        	if (!clientSocket.isClosed()) {
+        		try {
+        			byte[] toServer = "end".getBytes();
+        			out.write(toServer, 0, toServer.length);
+        			out.flush();
+        			out.close();
+        			in.close();
+        			clientSocket.close();
+        			System.out.println("Client closes the Socket");
+        		} catch (IOException e) {
+        			e.printStackTrace();
+        		}
+        	}
         }
     }
 
