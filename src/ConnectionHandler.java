@@ -76,7 +76,12 @@ public class ConnectionHandler extends Thread
     				{
     					if(attempt == 0) // no attempt left and current is not right answer
     					{
-    						gameover();
+    						totalScore--;
+    						if(totalScore < 0)
+    						{
+    							totalScore = 0;
+    						}
+    						gameover(totalScore);
     					}else
     					{
     						String continueGuess = "The current word is in form of ";
@@ -223,13 +228,19 @@ public class ConnectionHandler extends Thread
     	return new String(chars);
     }
     
-    public void gameover()
+    public void gameover(int total)
     {
     	try
         {
     		String gameOver = "game over";
     		byte[] dead = gameOver.getBytes();
     		out.write(dead, 0, dead.length);
+    		String score = ". The total score is ";
+			byte[] fromserver3 = score.getBytes();
+			out.write(fromserver3, 0, fromserver3.length);
+			String totals = Integer.toString(total);
+			byte[] fromserver4 = totals.getBytes();
+			out.write(fromserver4, 0, fromserver4.length);
     		out.flush();
         } catch (IOException e)
         {

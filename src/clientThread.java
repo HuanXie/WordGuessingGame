@@ -82,6 +82,7 @@ public class clientThread extends Thread{
         		byte[] toServer = startQueue.take().getBytes();
         		out.write(toServer, 0, toServer.length);
                 out.flush();
+                
                 byte[] attempt = new byte[4];
                 in.read(attempt, 0, attempt.length);
                 counter = byteArrayToInt(attempt);

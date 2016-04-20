@@ -90,11 +90,11 @@ public class Clientgui1 extends javax.swing.JPanel
                 .addComponent(show, javax.swing.GroupLayout.PREFERRED_SIZE, 388, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(84, Short.MAX_VALUE))
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                    .addContainerGap(152, Short.MAX_VALUE)
-                    .addComponent(replay, javax.swing.GroupLayout.PREFERRED_SIZE, 99, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGap(149, 149, 149)
-            		.addComponent(end)
-            		.addGap(22, 22, 22))
+                    .addContainerGap(195, Short.MAX_VALUE)
+                    .addComponent(replay)
+                    .addGap(18, 18, 18)
+                    .addComponent(end)
+                    .addGap(29, 29, 29))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -118,10 +118,11 @@ public class Clientgui1 extends javax.swing.JPanel
                 .addComponent(show, javax.swing.GroupLayout.PREFERRED_SIZE, 72, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(28, Short.MAX_VALUE))
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                    .addContainerGap(271, Short.MAX_VALUE)
-                    .addComponent(replay)
-                    .addContainerGap()
-            		.addComponent(end))
+                    .addContainerGap(262, Short.MAX_VALUE)
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(replay)
+                        .addComponent(end))
+                    .addContainerGap())
         );
         
         start.addActionListener(new ActionListener()
